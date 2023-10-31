@@ -1,9 +1,9 @@
 
 import Accounts from '@/components/Accounts';
 import { Avatar } from '@/components/avatar';
-import { getMe, logout } from '@/lib/actions';
-import { newPrivateKey } from '@/lib/contract';
-import { getNumberOfUsers } from '@/lib/storage';
+import { getMe, login, logout } from '@/lib/actions';
+import { createProfile, newPrivateKey } from '@/lib/contract';
+import { dropUser, getNumberOfUsers, storeUser } from '@/lib/storage';
 import { User } from '@/lib/types';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
@@ -66,24 +66,16 @@ export default async function RootLayout({
       following: 0,
       privateKey: privateUserKey
     }
+    await storeUser(newUser);
 
-    /* 
-      TODO #3: Store the user in the local account cache
-
-      HINT: Use the storeUser() function to store the user
-    */
-
-    /* 
-      TODO #4: Set up a try catch block to create the user's profile and log them in if successful.
-
-      HINT: 
-        - Use the createProfile() and login() functions to create the user's 
-          profile and log them in
-        
-        - In the catch block, use the dropUser() function to remove the user 
-          from the local account cache. Then, throw the error to be caught by the catch block in
-          the loginWindow.tsx file.
-    */
+    try {
+     await createProfile(newUser);
+     await login(newUser);
+      
+    } catch (error) {
+      dropUser(newUser)
+      throw error;
+    }
   }
 
   if (!me) {
